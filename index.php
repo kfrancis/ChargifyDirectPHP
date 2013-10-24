@@ -46,19 +46,28 @@
 
                 <h2>Signup for Acme Projects</h2>
 
-                <?php echo $config['paths']['redirectUrl']?>
-
                 <form class="form-horizontal" role="form" method="post" action="https://api.chargify.com/api/v2/signups">
                     <?php 
                         $timestamp = time();
                         $nonce = guid();
                         $apiId = $config['Chargify']['apiKey'];
+                        $apiSecret = $config['Chargify']['secret'];
+                        $apiSecretStr = mb_convert_encoding($config['Chargify']['secret'], 'ASCII');
+                        $utf8Str = mb_convert_encoding($apiId.$timestamp.$nonce.'redirect_uri='.$config['paths']['redirectUrl'], 'ASCII');
+                        echo '<p>'.$utf8Str.'</p>';
+                        $hmac_sha1_str1 = base64_encode(hash_hmac("sha1", $utf8Str, $apiSecretStr));
+                        echo '<p>'.$hmac_sha1_str1.'</p>';
+                        $hmac_sha1_str2 = base64_encode(hash_hmac("sha1", $utf8Str, $apiSecretStr, true));
+                        echo '<p>'.$hmac_sha1_str2.'</p>';
+                        $hmac_sha1_str3 = base64_encode(hash_hmac("sha1", $utf8Str, $apiSecretStr, false));
+                        echo '<p>'.$hmac_sha1_str3.'</p>';
+                        echo '<p>'.hash_hmac('sha1', $apiId.$timestamp.$nonce.'redirect_uri='.$config['paths']['redirectUrl'], $apiSecretStr).'</p>';
                     ?>
                     <input type="hidden" name="secure[api_id]" value="<?php echo $apiId ?>" />
                     <input type="hidden" name="secure[timestamp]" value="<?php echo $timestamp ?>" />
                     <input type="hidden" name="secure[nonce]" value="<?php echo $nonce ?>" />
                     <input type="hidden" name="secure[data]" value="redirect_uri=<?php echo $config['paths']['redirectUrl']?>" />
-                    <input type="hidden" name="secure[signature]" value="<?php echo oauth_hmacsha1($config['Chargify']['secret'], $apiId.$timestamp.$nonce.$config['paths']['redirectUrl']);?>" />
+                    <input type="hidden" name="secure[signature]" value="<?php echo base64_encode(hash_hmac('sha1', $apiId.$timestamp.$nonce.'redirect_uri='.$config['paths']['redirectUrl'], $config['Chargify']['secret'], true)) ?>" />
 
                     <div class="well well-sm">
                         <h4>Select Plan</h4>
@@ -258,29 +267,5 @@ function guid(){
                .substr($charid,20,12);
         return $uuid;
     }
-}
-
-function oauth_hmacsha1($key, $data) {
-    return base64_encode(hmacsha1($key, $data));
-}
-
-function hmacsha1($key,$data) {
-    $blocksize=64;
-    $hashfunc='sha1';
-    if (strlen($key)>$blocksize)
-        $key=pack('H*', $hashfunc($key));
-    $key=str_pad($key,$blocksize,chr(0x00));
-    $ipad=str_repeat(chr(0x36),$blocksize);
-    $opad=str_repeat(chr(0x5c),$blocksize);
-    $hmac = pack(
-                'H*',$hashfunc(
-                    ($key^$opad).pack(
-                        'H*',$hashfunc(
-                            ($key^$ipad).$data
-                        )
-                    )
-                )
-            );
-    return $hmac;
 }
 ?>

@@ -1,4 +1,6 @@
 <?php
+    
+require 'vendor/autoload.php';
 
 $config = array(
 	"urls" => array(
@@ -11,6 +13,7 @@ $config = array(
 	),
     "Chargify" => array(
         "apiKey" => "",
+        "password" => "",
         "secret" => ""
     )
 );

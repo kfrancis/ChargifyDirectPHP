@@ -28,6 +28,9 @@ local.properties
 # PDT-specific
 .buildpath
 
+﻿# Composer Artifacts
+[Vv]endor/
+composer.phar
 
 #################
 ## Visual Studio
